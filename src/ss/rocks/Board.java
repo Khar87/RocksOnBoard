@@ -2,6 +2,7 @@ package ss.rocks;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 public class Board {
@@ -14,13 +15,21 @@ public class Board {
 		}
 
 		for (int i = 0; i < x.length; ++i) {
-			if (!checkAndPutRock(x[i], y[i])) {
+			if (!checkAndPutRockInternal(x[i], y[i])) {
 				throw new IllegalArgumentException();
 			}
 		}
 	}
 
-	public final boolean checkAndPutRock(int x, int y) {
+	private Board(Board source) {
+		for (Field rock : source.rocks) {
+			if (!checkAndPutRockInternal(rock.x, rock.y)) {
+				throw new IllegalArgumentException();
+			}
+		}
+	}
+
+	private boolean checkAndPutRockInternal(int x, int y) {
 		final Field newRock = new Field(x, y);
 		boolean canPut = !rocks.contains(newRock) && !blocked.contains(newRock);
 		if (canPut) {
@@ -28,6 +37,22 @@ public class Board {
 			blocked.addAll(newRock.neighbours());
 		}
 		return canPut;
+	}
+
+	public Optional<Board> checkAndPutRock(int x, int y) {
+		Board newBoard = new Board(this);
+
+		Optional<Board> result;
+		if (newBoard.checkAndPutRockInternal(x, y)) {
+			result = Optional.of(newBoard);
+		} else {
+			result = Optional.empty();
+		}
+		return result;
+	}
+
+	public int rocks() {
+		return rocks.size();
 	}
 
 	class Field {
